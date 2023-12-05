@@ -6,6 +6,7 @@
 #include <SFML/Window/Keyboard.hpp>
 #include <array>
 #include <deque>
+#include <iostream>
 #include <memory>
 #include <thread>
 
@@ -19,17 +20,28 @@
 #include "objects/pipe.hpp"
 #include "objects/score.hpp"
 
-int main() {
-  srand(static_cast<unsigned int>(time(0))); // for pipe generation
+int main(int argc, char** argv) {
+  if (argc < 2) {
+    std::cerr << "assets directory path must be specified." << std::endl;
+    return 1;
+  }
+  const std::string assets_path = argv[1];
 
-  Assets::instance()->load_images("D:/workspace/tests/cpp/flappy-bird/assets/sprites");
-  Assets::instance()->load_audios("D:/workspace/tests/cpp/flappy-bird/assets/audios");
+  try {
+    Assets::instance()->load_images(assets_path + "/sprites");
+    Assets::instance()->load_audios(assets_path + "/audios");
+  } catch (const std::exception& e) {
+    std::cerr << e.what() << std::endl;
+    return 1;
+  }
 
   sf::RenderWindow window(sf::VideoMode(Config::width, Config::height), "flcppy bird");
   window.setVerticalSyncEnabled(true);
   window.setFramerateLimit(60);
 
   sf::Clock pipe_gen_clock;
+
+  srand(static_cast<unsigned int>(time(0))); // for pipe generation
 
   // sprites
   std::array<std::unique_ptr<Background>, 2> backgrounds = {Background::make(0), Background::make(1)};
@@ -75,10 +87,12 @@ int main() {
       } else if (event.type == sf::Event::KeyReleased) {
         if (event.key.code == sf::Keyboard::Space) {
           if (!game_started && !game_over) start();
+        } else if (event.key.code == sf::Keyboard::Escape) {
           if (game_over) init();
         }
       }
-      if (bird) bird->handle_event(event);
+
+      if (game_started && bird) bird->handle_event(event);
   };
 
   auto update = [&]() {
