@@ -8,7 +8,6 @@
 #include <deque>
 #include <iostream>
 #include <memory>
-#include <thread>
 
 #include "assets.hpp"
 #include "config.hpp"
